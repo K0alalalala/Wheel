@@ -66,6 +66,8 @@ final class ConversionTests: XCTestCase {
         let f = try Fixtures()
         let src = try f.image("Photo.png")
         for target in ["jpg", "heic", "tiff", "bmp", "avif"] {
+            // AVIF encoding only exists on newer macOS; the app greys that slice out elsewhere.
+            if ConvertAction(target: target, kind: .image).unavailableReason != nil { continue }
             let out = try await convert(src, to: target)
             XCTAssertEqual(out.first?.lastPathComponent, "Photo.\(target)")
             XCTAssertEqual(ImageEngine.pixelSize(out[0]), CGSize(width: 400, height: 300), target)
