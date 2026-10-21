@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make build)",
+      "Bash(make test)",
+      "Bash(make app)",
+      "Bash(make run)",
+      "Bash(make check)",
+      "Bash(swift build:*)",
+      "Bash(swift test:*)",
+      "Bash(scripts/build-app.sh:*)",
+      "Bash(scripts/privacy-check.sh)",
+      "Bash(scripts/check-credits.sh:*)",
+      "Bash(build/Wheel.app/Contents/MacOS/Wheel --preview:*)"
+    ],
+    "deny": [
+      "Edit(/Sources/Wheel/Credits.swift)",
+      "Write(/Sources/Wheel/Credits.swift)",
+      "Edit(/LICENSE)",
+      "Write(/LICENSE)",
+      "Edit(/.github/CODEOWNERS)",
+      "Write(/.github/CODEOWNERS)",
+      "Edit(/scripts/check-credits.sh)",
+      "Write(/scripts/check-credits.sh)"
+    ]
+  }
+}

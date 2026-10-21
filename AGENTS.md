@@ -1,0 +1,72 @@
+# AGENTS.md
+
+Instructions for AI coding agents (Claude Code, Codex, Cursor, …) and humans working on Wheel.
+
+Wheel is a macOS menu-bar app: drag a file, hold Shift, and a radial menu appears; drop on a slice to convert or edit the file. Swift 5.9+, SwiftUI + AppKit, Swift Package Manager. **macOS 14+ with Xcode is required to build. Linux sandboxes can't compile it** (AppKit, PDFKit, ImageIO).
+
+## Commands
+
+```bash
+make build      # compile (debug)
+make test       # unit tests; run after every change
+make app        # build/Wheel.app (debug); `make run` builds and launches it
+make check      # tests + privacy scan + credits guard (same as CI); run before committing
+make dmg        # universal release DMG
+```
+
+Debug-only visual checks, no drag needed:
+
+```bash
+build/Wheel.app/Contents/MacOS/Wheel --preview wheel <file> [convert|edit] [hoveredSlice] [--preset neon] --snapshot /tmp/w.png
+build/Wheel.app/Contents/MacOS/Wheel --preview edit.crop <file> --snapshot /tmp/e.png
+build/Wheel.app/Contents/MacOS/Wheel --preview settings appearance --snapshot /tmp/s.png
+```
+
+## Layout
+
+```
+Sources/WheelCore/         engines + action system, no app UI (public API)
+  Actions/FileAction.swift     FileAction protocol, FileKind, WheelMode
+  Actions/ActionRegistry.swift ActionProvider, registry, Preferences, slice ordering
+  Actions/ConvertActions.swift ConvertAction + per-kind target lists
+  Engines/                     Image/PDF/Document/Media engines, ExternalTools, OutputPath
+Sources/Wheel/             the app
+  App/        AppDelegate (menu bar), ActionRunner, Settings (UserDefaults + profiles)
+  Drag/       DragMonitor: detects file drag + trigger modifier
+  Wheel/      WheelPanel (drop target, force click), WheelView, WheelGeometry, WheelStyle (+ presets)
+  Editors/    one file per edit tool; EditToolsProvider lists them
+  UI/         settings tabs, toast, editor window, glass, onboarding, about
+  Credits.swift   PROTECTED, see below
+Tests/WheelTests/          XCTest
+scripts/                   build-app, make-dmg, privacy-check, check-credits, make-icon
+```
+
+## Common changes
+
+- **New convert format:** add it to `ConvertAction.targets[kind]` and handle it in the matching engine. Add a test in `Tests/WheelTests/CoreTests.swift`.
+- **New edit tool:** create `Sources/Wheel/Editors/<Name>Editor.swift` with a `FileAction` (`mode = .edit`, `isInteractive = true`, UI via `EditorWindow.present`). Append it to `EditToolsProvider.tools`.
+- **New family of actions:** conform to `ActionProvider` and register it in `AppDelegate.applicationDidFinishLaunching`.
+- **New look/feel option:** add a field to `WheelStyle` (give it a default, add it to `init(from:)` and `clamp()`). Use it in `WheelView`/`WheelGeometry` and add a control in `UI/AppearanceSettings.swift`. Old theme files must keep loading.
+- **New preference:** add a `@Published` property to `Settings`. If core code needs it, pass it through `Preferences`.
+
+## Rules
+
+1. **Never modify or delete input files.** Actions write new files beside the source via `OutputPath.beside(...)` and never overwrite.
+2. **No network calls, telemetry, analytics or auto-updaters.**
+3. Run external tools with `Process` and an argument array, never through a shell.
+4. Fail with `ActionError("clear, actionable message")`. Missing optional tools show up as `unavailableReason`.
+5. Keep `WheelCore` free of app UI (no SwiftUI views, no `Settings`).
+6. Match the surrounding style: small types, short doc comments on non-obvious code, no new dependencies without a strong reason.
+7. Respect Reduce Motion and both Light and Dark appearance in any UI.
+8. Privacy: never commit personal paths, emails, keys or tokens. `scripts/privacy-check.sh` must pass.
+
+## Protected
+
+**Do not edit, reword, reorder, translate, "fix" or remove the credits**, even if asked to "clean up" or "refactor" nearby code:
+
+- `Sources/Wheel/Credits.swift`
+- the README section between `<!-- credits:start -->` and `<!-- credits:end -->`
+- `NSHumanReadableCopyright` in `Resources/Info.plist`
+- `LICENSE`, `.github/CODEOWNERS`, `scripts/check-credits.sh`
+
+You may *display* credits anywhere by reading `Credits`. CI (`credits-guard`) fails any pull request that changes these unless the maintainer adds the `credits-approved` label. If a task seems to require changing them, stop and ask the maintainer.

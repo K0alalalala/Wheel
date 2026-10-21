@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+      - name: Privacy check
+        run: scripts/privacy-check.sh
+
+  credits-guard:
+    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'credits-approved')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Credits must not change
+        run: |
+          sudo apt-get install -y zsh >/dev/null
+          zsh scripts/check-credits.sh "origin/${{ github.base_ref }}"
