@@ -38,7 +38,7 @@ You've done the dance: open Preview, export, pick a format, find the file, renam
 2. **Hold <kbd>Shift</kbd>.** A wheel appears under the cursor, with options that fit that file type.
 3. **Drop it on a slice.** A small toast shows progress. Click it to see the result in Finder.
 
-The centre of the wheel switches between three wheels: **Convert**, **Edit** and, when you drag more than one file, **Combine**. Rest on the centre for a moment, or press firmly on a Force Touch trackpad.
+The centre of the wheel switches between three wheels: **Convert**, **Edit** and, when you drag more than one file, **Combine**. The wheel opens with your cursor on the centre, so nothing happens if you pause there. To switch, move onto any slice and back to the centre, then rest for a moment or press firmly on a Force Touch trackpad.
 
 <table>
   <tr>

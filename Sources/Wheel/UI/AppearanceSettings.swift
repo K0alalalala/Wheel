@@ -279,13 +279,12 @@ final class PreviewWheel: ObservableObject {
 
     func hover(at p: CGPoint, center: CGPoint) {
         let hit = model.geo.hit(p, center: center, count: model.slices.count)
-        guard hit != model.hover else { return }
-        model.hover = hit
+        guard model.updateHover(hit) else { return }
         hubTimer?.invalidate()
-        if hit == .hub, Settings.shared.hubSwitch.usesHover {
+        if model.hubActive, Settings.shared.hubSwitch.usesHover {
             hubTimer = Timer.scheduledTimer(withTimeInterval: Settings.shared.hubHoverDelay, repeats: false) { [weak self] _ in
                 MainActor.assumeIsolated {
-                    guard let self, self.model.hover == .hub else { return }
+                    guard let self, self.model.hubActive else { return }
                     self.model.toggleMode()
                 }
             }
@@ -294,7 +293,7 @@ final class PreviewWheel: ObservableObject {
 
     func endHover() {
         hubTimer?.invalidate()
-        model.hover = .none
+        model.updateHover(.none)
     }
 
     func replay() {

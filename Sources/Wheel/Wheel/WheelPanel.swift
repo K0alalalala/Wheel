@@ -72,6 +72,7 @@ final class WheelPanel {
             origin.y = min(max(origin.y, f.minY), f.maxY - size.height)
         }
         panel.setFrameOrigin(origin)
+        model.disarmHub() // opens under the cursor: the hub must be left once before it can switch
         panel.orderFrontRegardless()
         model.visible = true
         WheelLog.shared.info("Wheel shown: \(model.mode.rawValue), \(model.slices.count) slices, \(WheelLog.shared.describe(model.urls))")
@@ -91,14 +92,13 @@ final class WheelPanel {
         if !urls.isEmpty { model.load(urls) }
         let c = CGPoint(x: dropView.bounds.midX, y: dropView.bounds.midY)
         let hit = model.geo.hit(p, center: c, count: model.slices.count)
-        if hit != model.hover {
-            model.hover = hit
+        if model.updateHover(hit) {
             hubTimer?.invalidate(); hubTimer = nil
-            if hit == .hub, Settings.shared.hubSwitch.usesHover {
+            if model.hubActive, Settings.shared.hubSwitch.usesHover {
                 // Resting on the hub flips Convert <-> Edit, like a spring-loaded folder.
                 hubTimer = Timer.scheduledTimer(withTimeInterval: Settings.shared.hubHoverDelay, repeats: false) { [weak self] _ in
                     MainActor.assumeIsolated {
-                        guard let self, self.model.hover == .hub else { return }
+                        guard let self, self.model.hubActive else { return }
                         self.switchMode()
                     }
                 }
@@ -123,7 +123,7 @@ final class WheelPanel {
 
     /// Force click is offered only while the cursor is on the hub.
     fileprivate func springLoadingOptions(at p: CGPoint) -> NSSpringLoadingOptions {
-        guard Settings.shared.hubSwitch.usesForce else { return .disabled }
+        guard Settings.shared.hubSwitch.usesForce, model.hubArmed else { return .disabled }
         let c = CGPoint(x: dropView.bounds.midX, y: dropView.bounds.midY)
         return model.geo.hit(p, center: c, count: model.slices.count) == .hub ? [.enabled, .noHover] : .disabled
     }
@@ -131,11 +131,12 @@ final class WheelPanel {
     /// A firm press on the hub during the drag (macOS spring-loading with `.noHover` = force click only).
     fileprivate func forceClicked() {
         hubTimer?.invalidate(); hubTimer = nil
+        guard model.hubArmed else { return }
         switchMode()
     }
 
     fileprivate func dragExited() {
-        model.hover = .none
+        model.updateHover(.none) // leaving the wheel counts as moving off the hub
         hubTimer?.invalidate(); hubTimer = nil
     }
 

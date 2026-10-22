@@ -21,7 +21,7 @@ struct OnboardingView: View {
 
             step(1, "Start dragging any file", "From Finder or the Desktop.")
             step(2, "Hold \(Settings.shared.trigger.title)", "A wheel appears under the cursor.")
-            step(3, "Drop on a slice", "The result is saved next to the original. Originals are never changed. Hover the centre to switch between Convert, Edit and (for several files) Combine.")
+            step(3, "Drop on a slice", "The result is saved next to the original. Originals are never changed. To switch between Convert, Edit and (for several files) Combine, move off the centre and back onto it.")
 
             GroupBox {
                 HStack(alignment: .top) {

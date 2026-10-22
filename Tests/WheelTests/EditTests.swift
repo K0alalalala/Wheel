@@ -169,3 +169,29 @@ final class PDFWheelTests: XCTestCase {
         XCTAssertTrue(f.files().contains("Report.pdf"), "source untouched")
     }
 }
+
+@MainActor
+final class HubArmingTests: XCTestCase {
+    func testHubOnlySwitchesAfterTheCursorLeavesIt() {
+        let m = WheelModel()
+        m.load([URL(fileURLWithPath: "/x/Report.pdf")])
+        m.disarmHub()                         // wheel just appeared under the cursor
+
+        m.updateHover(.hub)
+        XCTAssertFalse(m.hubActive, "resting where the wheel opened must not switch")
+        XCTAssertEqual(m.hubTitle, m.mode.title, "no 'switch to…' hint yet")
+        XCTAssertNil(m.hubSubtitle)
+
+        m.updateHover(.slice(1))              // move out…
+        m.updateHover(.hub)                   // …and back in
+        XCTAssertTrue(m.hubActive)
+        XCTAssertNotNil(m.hubSubtitle)
+
+        m.disarmHub()                         // next drag starts fresh
+        m.updateHover(.hub)
+        XCTAssertFalse(m.hubActive)
+        m.updateHover(.none)                  // leaving the wheel entirely also arms it
+        m.updateHover(.hub)
+        XCTAssertTrue(m.hubActive)
+    }
+}

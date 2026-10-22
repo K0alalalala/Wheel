@@ -33,20 +33,40 @@ final class WheelModel: ObservableObject {
 
     func rebuild() { slices = ActionRegistry.shared.slices(for: urls, mode: mode) }
 
+    /// The wheel opens centred on the cursor, so the cursor starts on the hub. The hub only switches
+    /// wheels once it's "armed": after the cursor has left it at least once since the wheel appeared.
+    /// Without this, simply pausing after pressing Shift would flip the wheel on its own.
+    @Published private(set) var hubArmed = false
+
+    /// True when resting on (or force-clicking) the hub should switch wheels.
+    var hubActive: Bool { hover == .hub && hubArmed }
+
+    /// Records where the cursor is. Returns true if the hovered target changed.
+    @discardableResult
+    func updateHover(_ hit: WheelGeometry.Hit) -> Bool {
+        if hit != .hub, !hubArmed { hubArmed = true }
+        guard hit != hover else { return false }
+        hover = hit
+        return true
+    }
+
+    /// Called whenever the wheel appears: the cursor is on the hub, so disarm it.
+    func disarmHub() { hubArmed = false }
+
     func reset() {
-        urls = []; slices = []; hover = .none; mode = .convert
+        urls = []; slices = []; hover = .none; mode = .convert; hubArmed = false
     }
 
     var hubTitle: String {
         if case .slice(let i) = hover, slices.indices.contains(i) { return slices[i].action.title }
-        if hover == .hub { return nextMode == mode ? mode.title : nextMode.title }
+        if hubActive { return nextMode == mode ? mode.title : nextMode.title }
         if urls.isEmpty { return "…" }
         return slices.isEmpty ? "No actions" : mode.title
     }
 
     var hubSubtitle: String? {
         if case .slice(let i) = hover, slices.indices.contains(i) { return slices[i].disabledReason }
-        if hover == .hub {
+        if hubActive {
             switch Settings.shared.hubSwitch {
             case .hover: return "hold to switch"
             case .forceClick: return "press firmly"
@@ -180,7 +200,7 @@ struct WheelView: View {
     }
 
     private func hub(_ geo: WheelGeometry) -> some View {
-        let hot = model.hover == .hub
+        let hot = model.hubActive
         let k = geo.labelScale * CGFloat(style.labelScale)
         let outline = style.sliceFill == .outline
         return VStack(spacing: 1) {

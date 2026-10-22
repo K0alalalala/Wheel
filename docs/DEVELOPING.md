@@ -63,7 +63,7 @@ struct RemoveBackgroundAction: FileAction {
 
 1. **Detection.** Launch the app (◎ appears in the menu bar). Drag a file in Finder and press Shift: the wheel appears. Release Shift: it hides. Drop off the wheel: nothing happens. Without Shift, drags behave normally.
 2. **Convert.** Shift-drag a PDF onto **JPG**. The toast shows progress, then "Saved …"; click it to reveal the file. A multi-page PDF gives a folder of pages.
-3. **Edit.** Shift-drag a JPG, rest on the hub until it says EDIT, then try Crop, Add BG, Compress, Metadata, Redact, Annotate and Edit.
+3. **Edit.** Shift-drag a JPG and pause: the wheel must *not* switch on its own. Move onto a slice and back to the hub, rest until it says EDIT, then try Crop, Add BG, Compress, Metadata, Redact, Annotate and Edit.
 4. **PDF tools.** Shift-drag a PDF to the Edit wheel and open **All Tools**. Try Organize, Watermark, Protect then Unlock, and OCR on a scan.
 5. **Combine.** Shift-drag a PDF and a photo together: the Combine wheel opens. Try To PDF and Zip, then Stitch and GIF with several photos.
 6. **Settings.** Change the trigger key, try a preset, reorder slices, and export then import a theme.
@@ -93,6 +93,11 @@ make dmg            # universal build → privacy check → build/Wheel-<version
 ```
 
 Upload the `.dmg` and `.sha256` to a GitHub release, and paste the checksum into the notes.
+
+The installer window is styled by `make dmg`:
+- **Background:** `Resources/dmg-background.tiff`, drawn by `swift scripts/make-dmg-background.swift`. Re-run it after changing the art, and keep its layout in step with the icon positions in `scripts/make-dmg.sh`.
+- **Layout:** Finder applies the window size and icon positions through AppleScript. The first run asks to let your terminal control Finder (Privacy & Security → Automation). Without that permission you still get a working, plain DMG.
+- **Privacy:** the image mounts at `/Volumes/Wheel`, so the layout Finder saves contains no path from your home folder. The script refuses to ship it if it ever does.
 
 ## Publishing safely (for maintainers)
 
