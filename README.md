@@ -1,203 +1,241 @@
-<p align="center"><img src="Resources/AppIcon-preview.png" width="128" alt="Wheel icon"></p>
+<p align="center">
+  <img src="Resources/AppIcon-preview.png" width="112" alt="Wheel app icon: a glass wheel of slices on an orange square">
+</p>
 
-# Wheel
+<h1 align="center">Wheel</h1>
 
-A menu-bar utility for macOS. Start dragging a file and hold **Shift**: a radial menu opens under the cursor. Drop the file on a slice to convert or edit it. The result is saved next to the original, which is never modified.
+<p align="center">
+  <b>Convert, edit and combine files without opening a single app.</b><br>
+  Drag a file, hold <kbd>Shift</kbd>, drop it on a slice. Done.
+</p>
 
-- **Convert wheel**: slices depend on the file type, in a fixed order.
-  - Images: PNG, JPG, WEBP, HEIC, TIFF, AVIF, BMP, PDF
-  - PDF: JPG, PNG, TIFF, TXT, DOCX, RTF
-  - Documents (docx, txt, md, html, rtf): PDF, DOCX, TXT, RTF, HTML
-  - Video: MP4, MOV, GIF, WEBM, M4A, MP3
-  - Audio: M4A, MP3, WAV, AIFF, FLAC
-- **Edit wheel** for images: Compress, Metadata, Edit, Annotate, Add BG, Crop, Redact.
-- **Edit wheel** for PDFs (20 tools; the first 8 show on the wheel, **All Tools** opens a searchable launcher with the rest):
-  - **Pages:** Organize (drag to reorder, rotate, duplicate, insert blank, delete), Delete pages, Extract pages (one file or one per page), Split (every N pages or at chosen pages), Merge (several PDFs and images into one), Rotate, Reverse.
-  - **Stamps:** Watermark (text, size, opacity, angle, colour, centred or tiled) and Page numbers (6 positions, 3 styles, start number, skip first page), both with a live preview.
-  - **Security:** Protect (open password, block printing or copying) and Unlock.
-  - **Clean-up:** OCR (makes scans searchable on-device with Vision), Flatten, Grayscale (text stays vector), Trim margins, Clean (removes annotations, keeps links), 2-Up, Compress, Metadata.
-- **Combine wheel** (drag two or more files): **To PDF** (PDFs, images and documents in one PDF, with an order you set), **Zip** (one drop → `Archive.zip`), **Archive** (ZIP, TAR.GZ, 7Z or RAR, with name and compression level), **Stitch** (images into a strip, row or grid), **GIF** (images into an animation: speed, size, loop, boomerang) and **Join** (audio/video clips back to back). Mixed drags, like a PDF and a photo, or drags with folders, open straight on this wheel. Same-type drags open on Convert, so batch conversion stays one drop away.
-- To switch wheels (Convert → Edit → Combine), rest on the centre hub (delay adjustable) or **force click** it on a Force Touch trackpad. Settings lets you pick hover, force click, or both.
-- **Fully customizable** (Settings → Appearance): size, hub size, gaps, roundness, rotation, max slices, highlight colour (Wheel orange, system accent, or any colour), glass material and tint, filled/glass/outline slices, label style/font/size/caps, appear animation, hover zoom, bounciness and haptics. There's a live preview you can hover, plus 9 presets (Classic, Compact, Big & Bold, Liquid, Minimal, Neon, Terminal, Bubblegum, Native).
-- **Slices tab:** drag to reorder each wheel and toggle slices on/off.
-- **Theme files:** export your setup as a `.wheeltheme` file to share or switch between.
-- Output names follow the source, e.g. `Page 001.pdf` → `Page 001.jpg` → `Page 001 Cropped.jpg` → `Page 001 Cropped With Background.png`. If a name is taken, ` 2`, ` 3`… is added.
+<p align="center">
+  <a href="https://github.com/K0alalalala/Wheel/releases/latest"><img alt="Download the latest release" src="https://img.shields.io/github/v/release/K0alalalala/Wheel?label=download&color=FF5A1F"></a>
+  <img alt="macOS 14 or later" src="https://img.shields.io/badge/macOS-14%2B-black">
+  <img alt="Apple Silicon and Intel" src="https://img.shields.io/badge/Apple%20Silicon%20%2B%20Intel-universal-555">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-blue"></a>
+  <a href="https://github.com/K0alalalala/Wheel/actions/workflows/ci.yml"><img alt="Build status" src="https://github.com/K0alalalala/Wheel/actions/workflows/ci.yml/badge.svg"></a>
+</p>
 
-No network calls, no telemetry.
+<p align="center">
+  <img src="docs/images/hero.jpg" width="820" alt="A PDF named Quarterly Report being dragged onto the JPG slice of Wheel's radial menu. The other slices offer PNG, TIFF, TXT, DOCX and RTF.">
+</p>
+
+You've done the dance: open Preview, export, pick a format, find the file, rename it. Or upload a private PDF to a "free online converter". **Wheel skips all of that.** Start dragging any file from Finder or your Desktop and hold Shift. A wheel of options pops up under your cursor; let go over one. The new file appears right next to the original.
+
+- **Fast:** one drag, one drop. No windows, no menus, no save dialogs.
+- **Private:** everything happens on your Mac. Wheel has no network code at all.
+- **Safe:** your original is never changed. Wheel always writes a new file beside it.
+- **Free and open source** (MIT). No account, no subscription, no ads.
+
+<p align="center"><a href="https://github.com/K0alalalala/Wheel/releases/latest"><b>⬇︎ Download Wheel for Mac</b></a> · <a href="#install">How to install</a> · <a href="#faq">FAQ</a></p>
+
+---
+
+## How it works
+
+1. **Start dragging** a file (or several) from Finder or the Desktop.
+2. **Hold <kbd>Shift</kbd>.** A wheel appears under the cursor, with options that fit that file type.
+3. **Drop it on a slice.** A small toast shows progress. Click it to see the result in Finder.
+
+The centre of the wheel switches between three wheels: **Convert**, **Edit** and, when you drag more than one file, **Combine**. Rest on the centre for a moment, or press firmly on a Force Touch trackpad.
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/images/wheel-edit.jpg" alt="The Edit wheel for an image: Compress, Metadata, Edit, Annotate, Add BG, Crop and Redact, with Crop highlighted."><br><b>Edit</b> a photo</td>
+    <td align="center" width="33%"><img src="docs/images/wheel-pdf.jpg" alt="The Edit wheel for a PDF: All Tools, Organize, Merge, Split, Protect, OCR, Watermark and Extract."><br><b>PDF tools</b></td>
+    <td align="center" width="33%"><img src="docs/images/wheel-combine.jpg" alt="The Combine wheel for a PDF and two photos: To PDF, Zip and Archive."><br><b>Combine</b> several files</td>
+  </tr>
+</table>
+
+## What it can do
+
+### Convert anything into anything (almost)
+
+| Drop a… | …and get |
+|---|---|
+| **Image** (PNG, JPG, HEIC, WEBP, TIFF, BMP, GIF, AVIF) | PNG · JPG · WEBP · HEIC · TIFF · AVIF · BMP · PDF |
+| **PDF** | JPG · PNG · TIFF (every page) · TXT · DOCX · RTF |
+| **Document** (DOCX, TXT, Markdown, HTML, RTF) | PDF · DOCX · TXT · RTF · HTML |
+| **Video** | MP4 · MOV · GIF · WEBM · M4A · MP3 |
+| **Audio** | M4A · MP3 · WAV · AIFF · FLAC |
+
+Drag 50 photos at once and convert them all in one drop. The wheel only shows formats that make sense, and leaves out the one the file is already in.
+
+### Quick image edits
+
+Crop, compress, adjust, annotate, redact, strip location data, or put a screenshot on a pretty background, each in a small focused window that saves a new copy.
+
+<p align="center">
+  <img src="docs/images/editor-crop.jpg" width="31%" alt="Crop window with a draggable crop frame, aspect ratio chips and pixel size fields.">
+  <img src="docs/images/editor-background.jpg" width="31%" alt="Add Background window placing a photo on an orange gradient with padding, corner and shadow sliders.">
+  <img src="docs/images/editor-gif.jpg" width="31%" alt="Make GIF window previewing an animation made from three landscape photos, with speed and size options.">
+</p>
+
+**Redact** destroys the pixels under the black boxes; it isn't just a layer on top. **Metadata** shows what a photo reveals (camera, date, GPS location) and saves a clean copy.
+
+### A full PDF toolkit
+
+Twenty PDF tools. The common ones sit on the wheel, and **All Tools** opens the rest.
+
+- **Pages:** Organize (drag to reorder, rotate, duplicate, add blank pages), Delete pages, Extract pages, Split, Merge, Rotate, Reverse
+- **Stamps:** Watermark, Page numbers
+- **Security:** Protect with a password or block printing and copying; Unlock
+- **Clean-up:** OCR (make scans searchable), Flatten, Grayscale, Trim margins, remove comments, 2-up printing, Compress, strip metadata
+
+<p align="center">
+  <img src="docs/images/editor-organize.jpg" width="48%" alt="Organize Pages window showing six page thumbnails of a report, with rotate, duplicate, insert and delete buttons.">
+  <img src="docs/images/editor-watermark.jpg" width="31%" alt="Watermark window with a live preview of CONFIDENTIAL stamped diagonally across a report page.">
+</p>
+<p align="center">
+  <img src="docs/images/editor-pdf-tools.jpg" width="60%" alt="The All Tools launcher listing PDF tools with short descriptions: Organize, Merge, Split, Protect, OCR, Watermark, Extract, Delete, Numbers and Rotate.">
+</p>
+
+OCR uses Apple's on-device text recognition, so your scans never leave your Mac.
+
+### Combine several files into one
+
+Drag two or more files together and the **Combine** wheel opens:
+
+- **To PDF:** PDFs, photos and documents become one PDF, in the order you choose
+- **Zip** in one drop, or **Archive** as ZIP, TAR.GZ, 7Z or RAR
+- **Stitch:** photos into one long image, a row or a grid
+- **GIF:** photos into an animation
+- **Join:** audio or video clips back to back
+
+<p align="center">
+  <img src="docs/images/editor-combine.jpg" width="42%" alt="Combine into PDF window listing a report and three photos in a reorderable list, with page size options and a name field.">
+</p>
+
+### Make it yours
+
+Resize it, recolour it, reshape it. Pick one of nine presets or tweak every detail: size, shape, colours (including your Mac's accent colour), glass, fonts, animations, and which slices appear in what order. Share your look as a `.wheeltheme` file.
+
+<p align="center">
+  <img src="docs/images/presets.jpg" alt="Five wheel styles side by side: Classic, Neon (pink outlines), Liquid (rounded glass), Terminal (green on black) and Bubblegum (pink).">
+</p>
+<p align="center">
+  <img src="docs/images/settings-appearance.jpg" width="70%" alt="Wheel Settings, Appearance tab: a live wheel preview, preset buttons, and sliders for wheel size, hub size, slice gap, roundness and rotation.">
+</p>
+
+<p align="center">
+  <img src="docs/images/toast.jpg" width="70%" alt="Two progress toasts: 'Converting to JPG, 3 of 8 saved' with a progress bar, and 'Saved Quarterly Report.jpg, click to show in Finder'.">
+</p>
+
+## Private by design
+
+- **Nothing leaves your Mac.** Wheel has no network code: no uploads, no analytics, no update checks.
+- **Your originals are untouched.** Every action writes a new file next to the source, named after it (`Report.pdf` → `Report.jpg`, `Report Cropped.jpg`…), and never overwrites anything.
+- **A small, private log, only if you want it.** To help fix crashes, Wheel keeps a log in `~/Library/Logs/Wheel` that only you can read. It never records file contents, passwords or full paths, and hides file names unless you allow them. Turn it off in **Settings → General → Diagnostics**. [What's in the log?](#logs--crash-reports-local-only)
+- **Open source.** You can read every line, or build it yourself.
 
 ## Install
 
-1. Download `Wheel-x.y.z.dmg` from Releases and drag **Wheel** into **Applications**.
-2. Open it. Wheel isn't notarized by Apple, so macOS blocks the first launch:
-   - **macOS 15+:** System Settings → Privacy & Security → scroll down → **Open Anyway**.
-   - **macOS 14:** right-click Wheel → **Open** → **Open**.
-3. A ◎ icon appears in the menu bar. Wheel turns on **launch at login** the first time it runs from Applications; switch it off in Settings.
+1. **[Download the latest `Wheel-x.y.z.dmg`](https://github.com/K0alalalala/Wheel/releases/latest)** and open it.
+2. **Drag Wheel into Applications.**
+3. **Open Wheel.** macOS will say it can't verify the developer, because Wheel is free and isn't registered with Apple's paid developer program. To allow it, once:
+   - **macOS 15 Sequoia or later:** open **System Settings → Privacy & Security**, scroll down, click **Open Anyway** next to the message about Wheel, and confirm.
+   - **macOS 14 Sonoma:** in Applications, right-click Wheel → **Open** → **Open**.
+4. A **◎** icon appears in your menu bar. That's Wheel. It starts automatically when you log in; you can change that in Settings.
 
-Wheel needs macOS 14 or later and runs natively on Apple Silicon and Intel.
+**Requirements:** macOS 14 Sonoma or later, on an Apple Silicon or Intel Mac.
 
-## Build & run
+Each release lists a SHA-256 checksum, so you can check your download with `shasum -a 256 Wheel-x.y.z.dmg` if you like.
 
-Needs macOS 14+ and Xcode 15+ (Swift 5.9+).
+### Optional extras
 
-```bash
-scripts/build-app.sh          # builds build/Wheel.app (release)
-open build/Wheel.app
-```
+Almost everything works out of the box. A few formats rely on free tools you can install with [Homebrew](https://brew.sh), a popular package manager for the Mac. Until you do, those slices are greyed out and show the command to run.
 
-The script uses `/Applications/Xcode.app` even if `xcode-select` points at the Command Line Tools. Other entry points:
+| For | Run in Terminal |
+|---|---|
+| WEBP images | `brew install webp` |
+| MP3, FLAC, GIF and WEBM | `brew install ffmpeg` |
+| 7Z archives | `brew install sevenzip` |
+| RAR archives | `brew install --cask rar` |
+| Nicer Markdown → PDF/DOCX | `brew install pandoc` |
 
-```bash
-swift test                                   # unit tests (conversions, edits, naming, registry, hit-testing)
-xcodebuild -scheme Wheel -destination 'platform=macOS' build
-open Package.swift                           # work on it in Xcode
-```
+**Settings → Tools** shows which ones Wheel found.
 
-Launch at login switches on automatically the first time Wheel runs from `/Applications`. It is skipped for builds run from elsewhere, so a dev build never replaces the login item.
+## FAQ
 
-### Making a release
+<details>
+<summary><b>Is it really free? What's the catch?</b></summary>
 
-```bash
-scripts/make-dmg.sh           # universal build → privacy check → build/Wheel-<version>.dmg (+ .sha256)
-```
+No catch. Wheel is open source under the MIT license: free to use, change and share. There's no account, no tracking and nothing to upgrade to.
+</details>
 
-The version comes from `Resources/Info.plist`, or from a `v1.2.3` git tag when building exactly that commit. Upload the `.dmg` and paste its SHA-256 into the release notes.
+<details>
+<summary><b>Does Wheel upload my files anywhere?</b></summary>
 
-## Permissions
+No. All conversions and edits, including text recognition (OCR), run on your Mac. Wheel contains no networking code, and you can check that in the source.
+</details>
 
-Drag detection needs **no permissions**. It polls the mouse button and modifier keys and watches the system drag pasteboard.
+<details>
+<summary><b>Why does macOS warn me when I first open it?</b></summary>
 
-**Accessibility** is optional. It lets **Esc** close the wheel mid-drag, because global key monitoring needs it. The first-run screen links to the right pane: System Settings → Privacy & Security → Accessibility. The build is ad-hoc signed, so after a rebuild macOS may ask again. If Esc stops working, remove and re-add Wheel in that list.
+Apple asks developers to pay for a yearly certificate and submit apps for "notarization". Wheel is a free project and skips that, so macOS asks you to confirm once. The steps are under [Install](#install). The source is public, and each download has a checksum you can verify.
+</details>
+
+<details>
+<summary><b>Will it change or delete my original file?</b></summary>
+
+Never. Every action creates a new file next to the original. If a file with that name already exists, Wheel adds " 2", " 3" and so on rather than overwriting it.
+</details>
+
+<details>
+<summary><b>The wheel doesn't appear when I drag.</b></summary>
+
+- Make sure the ◎ menu-bar icon is there and **Enabled** is ticked in its menu.
+- Hold the trigger key *while* dragging: Shift by default, or whatever you chose in Settings.
+- Drag from Finder or the Desktop. Some apps (Mail attachments, Photos) hand over files in a way Wheel can't see yet. Save the file to a folder first.
+</details>
+
+<details>
+<summary><b>Does it need special permissions?</b></summary>
+
+No. Optionally, you can grant **Accessibility** so the <kbd>Esc</kbd> key can close the wheel mid-drag. The first-run screen explains it, and everything else works without it.
+</details>
+
+<details>
+<summary><b>Can I choose which options show up, or use a different key?</b></summary>
+
+Yes. In **Settings** you can pick the trigger key (Shift, Option, Control or Command), hide or reorder slices for each wheel, and change how the centre switches wheels.
+</details>
+
+<details>
+<summary><b>How do I uninstall it?</b></summary>
+
+Quit Wheel from its menu-bar icon and drag **Wheel** from Applications to the Trash. To remove its settings and logs too, delete `~/Library/Preferences/io.github.k0alalalala.wheel.plist` and `~/Library/Logs/Wheel`.
+</details>
 
 ## Logs & crash reports (local only)
 
-Wheel keeps a small diagnostic log so that when something goes wrong, there's a record of what happened. **It never leaves your Mac.** Wheel has no network code at all, and nothing is uploaded, synced or "phoned home".
-
-**Where:** `~/Library/Logs/Wheel/`. It's also visible in Console.app under *Log Reports*.
+When something goes wrong, a little history helps. Wheel keeps a diagnostic log **only on your Mac**, in `~/Library/Logs/Wheel/`:
 
 | File | What's in it |
 |---|---|
-| `wheel.log` (+ `wheel.1.log`, `wheel.2.log`) | Launch info (Wheel and macOS version, which optional tools are installed), when the wheel opens, which slice you dropped on, how each action went and how long it took, and errors. |
-| `crash-<date>.txt` | If Wheel crashes, a short summary of macOS's own crash report: exception, reason and the crashing thread's stack. Registers, other threads and other apps are left out. |
+| `wheel.log` (+ `wheel.1.log`, `wheel.2.log`) | Wheel and macOS versions, when the wheel opened, which option you chose, whether it worked, how long it took, and any errors |
+| `crash-<date>.txt` | If Wheel crashes, a short technical summary of what happened |
 
-**What's never logged:** file contents, passwords (Protect/Unlock), full paths, your home folder, or your name. File names show as `‹pdf›`, `‹jpg›` unless you turn on *Include file names*.
+- **Never logged:** file contents, passwords, full paths, your home folder or your name. File names show as `‹pdf›`, `‹jpg›` unless you turn on *Include file names*.
+- **Protected:** only your account can read it. It's kept out of Time Machine and capped at a few MB, and old entries delete themselves after 14 days.
+- **Your choice:** turn it off in **Settings → General → Diagnostics**, where you can also open the folder, copy recent entries, or delete everything.
 
-**How it's protected:** the folder is readable only by you (permissions `700`, files `600`). It's excluded from Time Machine, and capped at three ~1 MB files. Entries older than 14 days delete themselves, and the 10 newest crash summaries are kept.
+**Reporting a problem?** Click **Copy Recent Log** in that same section, read it over, and paste it into a [new issue](https://github.com/K0alalalala/Wheel/issues/new). If you use an AI coding assistant (Claude Code, Codex and the like), you can ask it to look at `~/Library/Logs/Wheel/`; this repo tells it how.
 
-**Opting out:** Settings → General → Diagnostics → turn off *Keep a local diagnostic log*. Wheel then writes nothing. Existing logs stay until you click **Delete Logs…**.
+## Known limits
 
-**Getting help with a problem:**
-- **Share with a person:** click **Copy Recent Log** (the last 300 lines plus the newest crash summary), read it over, and paste it into an issue.
-- **Share with an AI coding agent:** ask it to read `~/Library/Logs/Wheel/`. Claude Code, Codex and others can open the folder directly, and `AGENTS.md` tells them how to use it.
-- **Full macOS report:** macOS also keeps Wheel's complete crash reports in `~/Library/Logs/DiagnosticReports/Wheel-*.ips`.
+- Some apps, like Mail attachments and Photos, don't hand over real files when you drag, so Wheel can't pick them up yet.
+- Watermark, Page numbers, 2-Up and OCR redraw the pages, so PDF form fields and comments don't carry over. The visible page does.
+- WEBP output, MP3/FLAC/GIF/WEBM, 7Z and RAR need the [optional extras](#optional-extras).
 
-## Optional tools (Homebrew)
+## Contributing
 
-These work without extra installs: all image formats except WEBP output, PDF ↔ images/TXT/DOCX/RTF, DOCX/RTF/HTML/TXT/MD → PDF/DOCX/TXT/RTF/HTML, MP4/MOV/M4A export, and WAV/AIFF from audio.
+Ideas, bug reports and pull requests are welcome; please [open an issue](https://github.com/K0alalalala/Wheel/issues) first for big changes.
 
-| Tool | Unlocks | Install |
-|---|---|---|
-| `cwebp` | WEBP output (ImageIO reads WebP but can't write it) | `brew install webp` |
-| `ffmpeg` | MP3, FLAC, GIF, WEBM, and video → WAV/AIFF. Also a WEBP fallback | `brew install ffmpeg` |
-| `pandoc` | Better Markdown rendering | `brew install pandoc` |
-| `7zz` | 7Z archives | `brew install sevenzip` |
-| `rar` | RAR archives (RAR is proprietary; WinRAR's free command-line tool) | `brew install --cask rar` |
-
-Slices whose backend is missing appear greyed out and show the install command on hover. **Settings → Tools** shows what was found.
-
-## Testing by hand
-
-1. **Shell and detection.** Launch the app; a ◎ icon appears in the menu bar. Drag any file in Finder, then press Shift: the wheel appears under the cursor. Release Shift: it hides. Press Shift again: it returns. Drop anywhere off the wheel: nothing happens. Without Shift, drags behave normally.
-2. **Convert.** Shift-drag a PDF onto **JPG**. A toast reads "Converting to JPG · 1 of 1 saved", then "Saved Page 001.jpg". Click the toast to reveal the file. A multi-page PDF produces a folder `Name JPG/` with numbered pages, or one multipage TIFF. Shift-drag a PNG and the PNG slice is absent. Drag several files to batch-convert them, and click the toast's **X** to cancel a long batch.
-3. **Edit.** Shift-drag a JPG and hover the hub until it says EDIT. Then:
-   - Drop on **Crop**: drag the handles, try 1:1 and 16:9, type W/H, then Apply → `… Cropped.jpg`.
-   - **Add BG**: pick swatches, adjust the sliders and ratio, then Save → `… With Background.png`.
-   - **Compress**: shows the size before and the estimated size after.
-4. **The rest.**
-   - **Metadata**: lists EXIF/GPS and saves `… No Metadata.jpg`. The orientation is kept.
-   - **Redact**: draw boxes and save. The pixels under each box are black in the output.
-   - **Annotate**: pen, arrow, box, text.
-   - **Edit**: brightness, contrast, saturation, rotate, flip.
-   - **Settings** (menu bar → Settings…): change the trigger key, hide slices, pin a default format to the top slot.
-
-For checking visuals without dragging (debug builds only: `scripts/build-app.sh debug`):
-
-```bash
-build/Wheel.app/Contents/MacOS/Wheel --preview wheel ~/Desktop/photo.jpg edit 3 --snapshot /tmp/wheel.png
-build/Wheel.app/Contents/MacOS/Wheel --preview edit.crop ~/Desktop/photo.jpg
-```
-
-## Architecture
-
-```
-Sources/
-  WheelCore/            library, no app UI: reusable by future front ends
-    Actions/
-      FileAction.swift      FileAction protocol, FileKind, WheelMode
-      ActionRegistry.swift  ActionProvider protocol, registry, Preferences
-      ConvertActions.swift  ConvertAction + per-kind target lists
-    Engines/            ImageEngine, PDFEngine, DocumentEngine, MediaEngine, ExternalTools, OutputPath
-  Wheel/                the menu-bar app
-    App/                AppDelegate (menu bar), ActionRunner (toast + batch), Settings
-    Drag/DragMonitor    file-drag + modifier detection
-    Wheel/              WheelPanel (NSPanel + NSDraggingDestination), WheelView, WheelGeometry
-    Editors/            one file per edit tool + EditToolsProvider
-    UI/                 glass materials, editor window, toast, settings, onboarding
-Tests/WheelTests/       engine, naming, registry, editor-math tests
-```
-
-How a drop flows: `DragMonitor` sees a file drag with Shift held → `WheelPanel` shows at the cursor → `ActionRegistry.slices(for:mode:)` picks slices → the drop on a slice goes to `ActionRunner.run` → `FileAction.run` writes new files beside the source → toast.
-
-### Extending
-
-**A new conversion format.** Add the extension to `ConvertAction.targets[kind]` and handle it in the matching engine.
-
-**A new edit tool.** Write a `FileAction` (set `isInteractive` and present an editor with `EditorWindow.present`), then add it to `EditToolsProvider.tools`:
-
-```swift
-struct RemoveBackgroundAction: FileAction {
-    let id = "edit.removebg", title = "Cut Out", symbol = "person.crop.square", mode = WheelMode.edit
-    func supports(_ url: URL) -> Bool { FileKind.of(url) == .image }
-    func run(_ urls: [URL], progress: @escaping ProgressHandler) async throws -> [URL] {
-        // write new files next to urls[0] with OutputPath.beside(...)
-    }
-}
-```
-
-**A whole family of actions** (e.g. a third wheel, or third-party tools). Conform to `ActionProvider` and call `ActionRegistry.shared.register(...)` at launch. The registry merges providers in registration order, caps the wheel at `maxSlices`, and applies the hidden/pinned settings for you.
-
-**Another front end.** `WheelCore` has no dependency on the app. A Finder Quick Action, a Share extension or a CLI can link it and call the same actions.
-
-Contract for every action: write new files only, never modify or delete inputs, throw `ActionError("clear message")` on failure, and respect task cancellation.
-
-## Publishing safely
-
-This repo is set up so publishing it doesn't leak who you are or anything about your Mac:
-
-| Risk | What's in place |
-|---|---|
-| Your email in git history | This repo's git `user.email` is your GitHub **noreply** address. The privacy check fails if any commit uses another address. |
-| Your username/home path inside the app | Release builds remap source paths and strip debug symbols. The privacy check scans the built binary. |
-| Real name in a signing certificate | Builds are ad-hoc signed (anonymous). Developer ID signing is opt-in via `DEVELOPER_ID`. |
-| Secrets committed by accident | None are needed. Signing and notarization credentials stay in your keychain, and the check scans for common key/token formats. |
-| Files from this Mac in the DMG | The DMG is built from a clean staging folder with extended attributes stripped. |
-| Tampered downloads | `make-dmg.sh` writes a SHA-256 checksum to publish alongside the DMG. |
-
-Before every push:
-
-```bash
-scripts/privacy-check.sh
-```
-
-On GitHub, also turn on **Settings → Emails → "Keep my email addresses private"** and **"Block command line pushes that expose my email"**. Then a slip gets rejected by GitHub too.
-
-**About notarization.** Without it, users click "Open Anyway" once. A $99/year Apple Developer ID removes that step, but the certificate shows your legal name (or a registered company's) to everyone who installs. If you decide to later:
-
-```bash
-xcrun notarytool store-credentials wheel-notary      # once; stored in your keychain
-DEVELOPER_ID="Developer ID Application: … (TEAMID)" NOTARY_PROFILE=wheel-notary scripts/make-dmg.sh
-```
-
-**What the app itself does.** It makes no network connections and has no telemetry or analytics. Its diagnostic log stays in `~/Library/Logs/Wheel` (see [Logs & crash reports](#logs--crash-reports-local-only)). It reads only the files you drop on it and writes only new files next to them. External tools (ffmpeg, cwebp, pandoc) run with argument lists, never through a shell, so odd filenames can't inject commands.
+- **Building and extending Wheel:** [docs/DEVELOPING.md](docs/DEVELOPING.md)
+- **Working with an AI coding agent:** point it at [AGENTS.md](AGENTS.md). Claude Code also reads `CLAUDE.md` and comes pre-configured to build and test.
+- **Security issues:** please report privately; see [SECURITY.md](SECURITY.md).
 
 <!-- credits:start (protected: see AGENTS.md) -->
 ## Credits
@@ -212,10 +250,6 @@ DEVELOPER_ID="Developer ID Application: … (TEAMID)" NOTARY_PROFILE=wheel-notar
 No humans were overworked in the making of this app. The same credits appear in the app under **About Wheel**.
 <!-- credits:end -->
 
-MIT licensed. See [LICENSE](LICENSE).
+## License
 
-## Known limits
-
-- Watermark, Page numbers, 2-Up and OCR redraw the pages, so form fields and comments aren't carried over (the visible page is). Flatten removes them on purpose.
-- The drag must come from an app that puts real file URLs on the drag pasteboard (Finder, Desktop, most file managers). Mail attachments and Photos use file promises and aren't picked up.
-- WEBP output and MP3/FLAC/GIF/WEBM need the Homebrew tools above.
+[MIT](LICENSE): use it, change it, share it.

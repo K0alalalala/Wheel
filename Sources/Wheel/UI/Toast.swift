@@ -90,7 +90,7 @@ final class Toast {
     }
 }
 
-private struct ToastView: View {
+struct ToastView: View {
     @ObservedObject var model: ToastModel
     @ObservedObject private var settings = Settings.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -125,7 +125,7 @@ private struct ToastView: View {
             .padding(.horizontal, 14).padding(.bottom, 5)
             .opacity(model.state == .working ? 1 : 0)
         }
-        .background(GlassBackground(material: .hudWindow, shape: .rounded(14)))
+        .background(Glass(material: .hudWindow, shape: .rounded(14)))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.white.opacity(0.2)))
         .contentShape(Rectangle())
         .onTapGesture { model.onClick?() }

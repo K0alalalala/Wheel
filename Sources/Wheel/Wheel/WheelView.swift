@@ -103,7 +103,7 @@ struct WheelView: View {
     private func disc(_ geo: WheelGeometry) -> some View {
         ZStack {
             if let material = style.material.ns {
-                GlassBackground(material: material, shape: .circle, blending: blending)
+                Glass(material: material, shape: .circle, blending: blending)
             } else {
                 Circle().fill(Color(nsColor: .windowBackgroundColor))
             }

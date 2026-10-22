@@ -74,7 +74,7 @@ final class EditorWindow: NSObject, EditorWindowDelegate {
 }
 
 /// Glass card with an X at the top left and a centered title.
-private struct EditorChrome<Content: View>: View {
+struct EditorChrome<Content: View>: View {
     let title: String
     let onClose: () -> Void
     @ViewBuilder let content: Content
@@ -98,7 +98,7 @@ private struct EditorChrome<Content: View>: View {
             .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 8)
             content
         }
-        .background(GlassBackground(material: .hudWindow, shape: .rounded(18)))
+        .background(Glass(material: .hudWindow, shape: .rounded(18)))
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }

@@ -3,7 +3,7 @@
 SHELL := /bin/zsh
 export DEVELOPER_DIR ?= $(shell if [[ -d /Applications/Xcode.app && "$$(xcode-select -p)" == *CommandLineTools* ]]; then echo /Applications/Xcode.app/Contents/Developer; else xcode-select -p; fi)
 
-.PHONY: build test app run dmg check icon logs clean
+.PHONY: build test app run dmg check icon screenshots logs clean
 
 build:            ## Compile everything (debug)
 	swift build
@@ -25,6 +25,10 @@ check:            ## Everything CI checks: tests, privacy scan, credits guard
 	swift test
 	scripts/privacy-check.sh
 	scripts/check-credits.sh
+
+screenshots:      ## Re-render the README images into docs/images (synthetic samples, default settings)
+	scripts/build-app.sh debug
+	build/Wheel.app/Contents/MacOS/Wheel --readme-shots "$(CURDIR)/docs/images"
 
 icon:             ## Regenerate Resources/AppIcon.icns
 	swift scripts/make-icon.swift

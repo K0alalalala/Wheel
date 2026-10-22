@@ -67,7 +67,10 @@ struct WheelProfile: Codable {
 /// User preferences, persisted in UserDefaults.
 final class Settings: ObservableObject {
     static let shared = Settings()
-    private let d = UserDefaults.standard
+    /// Where preferences live. Debug tooling (README screenshots) points this at a throwaway suite
+    /// before `shared` is first used, so it renders defaults and never touches real preferences.
+    nonisolated(unsafe) static var store = UserDefaults.standard
+    private let d = Settings.store
 
     @Published var enabled: Bool { didSet { d.set(enabled, forKey: "enabled") } }
     @Published var trigger: TriggerModifier { didSet { d.set(trigger.rawValue, forKey: "trigger") } }

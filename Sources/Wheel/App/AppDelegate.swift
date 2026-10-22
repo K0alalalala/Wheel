@@ -13,6 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hideAfterMouseUp: DispatchWorkItem?
 
     func applicationDidFinishLaunching(_ note: Notification) {
+        #if DEBUG
+        let shotsDir = Self.readmeShotsDir
+        #endif
         startDiagnostics()
         NSApp.setActivationPolicy(.accessory) // belt and braces with LSUIElement
         Preferences.current = { Settings.shared.preferences }
@@ -26,6 +29,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if Settings.shared.enabled { monitor.start() }
 
         #if DEBUG
+        if let shotsDir {
+            monitor.stop()
+            ReadmeShots.run(to: shotsDir)
+            NSApp.terminate(nil)
+            return
+        }
         if runPreviewIfRequested() { return }
         #endif
         Settings.shared.enableLaunchAtLoginOnFirstRun()
@@ -33,6 +42,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     #if DEBUG
+    /// `--readme-shots <dir>`: switch to a fresh, throwaway defaults suite (default look, logging off)
+    /// before anything reads Settings, so screenshots never show or change the user's setup.
+    /// Set by `prepareReadmeShots()` from main.swift, before anything (even AppDelegate's panels) reads Settings.
+    nonisolated(unsafe) static var readmeShotsDir: URL?
+
+    static func prepareReadmeShots() {
+        readmeShotsDir = readmeShotsDirectory()
+    }
+
+    private static func readmeShotsDirectory() -> URL? {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: "--readme-shots"), args.count > i + 1 else { return nil }
+        let suite = "io.github.k0alalalala.wheel.readme-shots"
+        UserDefaults.standard.removePersistentDomain(forName: suite)
+        let store = UserDefaults(suiteName: suite)!
+        // A suite still falls back to the app's own domain for missing keys, so pin every setting.
+        let defaults: [String: Any] = [
+            "loggingEnabled": false, "logFileNames": false, "onboarded": true, "enabled": true,
+            "trigger": "shift", "quality": 0.85, "revealAfterSave": false, "pdfAllPages": true, "pdfDPI": 300,
+            "hubSwitch": "both", "hubHoverDelay": 0.45, "toastPlacement": "cursor", "toastDuration": 4.0,
+            "hiddenActions": [String](), "sliceOrder": [String: [String]](),
+            "style": (try? JSONEncoder().encode(WheelStyle())) ?? Data(),
+        ]
+        for (key, value) in defaults { store.set(value, forKey: key) }
+        Settings.store = store
+        return URL(fileURLWithPath: args[i + 1])
+    }
+
     /// Developer hook for checking visuals without a real drag:
     ///   Wheel --preview wheel <file> [convert|edit] [sliceIndex]
     ///   Wheel --preview <action id, e.g. edit.crop> <file>

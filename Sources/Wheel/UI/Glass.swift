@@ -65,6 +65,34 @@ struct GlassBackground: NSViewRepresentable {
     }
 }
 
+/// Glass for SwiftUI layouts. Debug builds can swap in a flat stand-in, because the real
+/// behind-window blur can't be captured offscreen (used by the README screenshot generator).
+struct Glass: View {
+    var material: NSVisualEffectView.Material = .hudWindow
+    var shape: GlassBackground.Shape = .rounded(18)
+    var blending: NSVisualEffectView.BlendingMode = .behindWindow
+
+    #if DEBUG
+    /// When set: (disc tint, panel tint) drawn instead of the blur.
+    nonisolated(unsafe) static var renderStandIn: (disc: Color, panel: Color)?
+    #endif
+
+    var body: some View {
+        #if DEBUG
+        if let standIn = Self.renderStandIn {
+            switch shape {
+            case .circle: Circle().fill(standIn.disc)
+            case .rounded(let r): RoundedRectangle(cornerRadius: r).fill(standIn.panel)
+            }
+        } else {
+            GlassBackground(material: material, shape: shape, blending: blending)
+        }
+        #else
+        GlassBackground(material: material, shape: shape, blending: blending)
+        #endif
+    }
+}
+
 /// Borderless panel that can still take keyboard focus (needed for text fields in editors).
 final class KeyablePanel: NSPanel {
     override var canBecomeKey: Bool { true }
