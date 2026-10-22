@@ -74,6 +74,7 @@ final class WheelPanel {
         panel.setFrameOrigin(origin)
         panel.orderFrontRegardless()
         model.visible = true
+        WheelLog.shared.info("Wheel shown: \(model.mode.rawValue), \(model.slices.count) slices, \(WheelLog.shared.describe(model.urls))")
     }
 
     func hide() {
@@ -111,6 +112,7 @@ final class WheelPanel {
 
     private func switchMode() {
         model.toggleMode()
+        WheelLog.shared.info("Hub switched to \(model.mode.rawValue)")
         haptic(.generic)
     }
 
@@ -140,9 +142,7 @@ final class WheelPanel {
     fileprivate func performDrop(at p: CGPoint, urls: [URL]) -> Bool {
         let c = CGPoint(x: dropView.bounds.midX, y: dropView.bounds.midY)
         let hit = model.geo.hit(p, center: c, count: model.slices.count)
-        #if DEBUG
-        NSLog("Wheel drop: %@ on %@", String(describing: hit), urls.map(\.lastPathComponent).joined(separator: ", "))
-        #endif
+        WheelLog.shared.info("Drop on \(hit) in \(model.mode.rawValue) wheel")
         defer { hide() }
         switch hit {
         case .slice(let i) where model.slices.indices.contains(i) && model.slices[i].isEnabled:

@@ -53,9 +53,12 @@ public final class ActionRegistry {
 
     public func register(_ provider: ActionProvider) { providers.append(provider) }
 
-    /// Convert wheels are ordered per file kind; the Edit wheel shares one order across kinds.
+    /// Registers a provider ahead of the others, so its actions get the first slots by default.
+    public func registerFirst(_ provider: ActionProvider) { providers.insert(provider, at: 0) }
+
+    /// Each wheel (mode + file kind) keeps its own order, e.g. "edit.pdf". Combine has one order for all files.
     public static func orderKey(kind: FileKind, mode: WheelMode) -> String {
-        mode == .edit ? "edit" : "\(mode.rawValue).\(kind.rawValue)"
+        mode == .combine ? "combine" : "\(mode.rawValue).\(kind.rawValue)"
     }
 
     /// Actions in the user's order: listed ids first (in that order), then the rest as providers return them.
@@ -73,14 +76,34 @@ public final class ActionRegistry {
         providers.flatMap { $0.actions(for: kind, mode: mode) }
     }
 
-    /// Slices for the dragged files, in wheel order. Based on the first file's kind;
-    /// files an action can't take are skipped when it runs.
+    /// Slices for the dragged files, in wheel order. Convert/Edit are based on the first file's kind
+    /// (files an action can't take are skipped when it runs); Combine looks at the whole set.
     public func slices(for urls: [URL], mode: WheelMode) -> [WheelSlice] {
         guard let first = urls.first else { return [] }
         let prefs = Preferences.current()
         let kind = FileKind.of(first)
+        if mode == .combine && urls.count < 2 { return [] }
         let actions = ordered(allActions(for: kind, mode: mode), kind: kind, mode: mode, prefs: prefs)
-            .filter { $0.supports(first) && !prefs.hiddenActions.contains($0.id) }
+            .filter { $0.accepts(urls) && !prefs.hiddenActions.contains($0.id) }
         return actions.prefix(max(prefs.maxSlices, 1)).map { WheelSlice(action: $0, disabledReason: $0.unavailableReason) }
+    }
+
+    /// The wheel a drag opens on: Combine for mixed file types or folders, otherwise the first mode with slices.
+    public func initialMode(for urls: [URL]) -> WheelMode {
+        let kinds = Set(urls.map(FileKind.of))
+        let hasFolder = urls.contains { (try? $0.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true }
+        if urls.count > 1, kinds.count > 1 || hasFolder, !slices(for: urls, mode: .combine).isEmpty { return .combine }
+        return WheelMode.cycle.first { !slices(for: urls, mode: $0).isEmpty } ?? .convert
+    }
+
+    /// The next mode in the hub cycle that has slices for these files.
+    public func nextMode(after mode: WheelMode, for urls: [URL]) -> WheelMode {
+        let cycle = WheelMode.cycle
+        let start = cycle.firstIndex(of: mode) ?? 0
+        for step in 1...cycle.count {
+            let m = cycle[(start + step) % cycle.count]
+            if !slices(for: urls, mode: m).isEmpty { return m }
+        }
+        return mode
     }
 }

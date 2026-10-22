@@ -2,18 +2,26 @@ import AppKit
 import PDFKit
 
 public enum PDFEngine {
-    /// Renders a page to an opaque bitmap on white.
+    /// Renders a page to an opaque bitmap on white, as it appears on screen (crop box, rotation applied).
     public static func render(page: PDFPage, dpi: CGFloat) throws -> CGImage {
-        let bounds = page.bounds(for: .mediaBox)
-        let rotated = page.rotation % 180 != 0
-        let ptSize = rotated ? CGSize(width: bounds.height, height: bounds.width) : bounds.size
+        let ptSize = PDFTools.displayedSize(page)
         let scale = dpi / 72
         let w = Int((ptSize.width * scale).rounded()), h = Int((ptSize.height * scale).rounded())
         guard let ctx = ImageEngine.bitmap(width: w, height: h) else { throw ActionError("Out of memory rendering page.") }
         ctx.setFillColor(NSColor.white.cgColor)
         ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
-        ctx.scaleBy(x: scale, y: scale)
-        page.draw(with: .mediaBox, to: ctx)
+        ctx.interpolationQuality = .high
+        if let ref = page.pageRef {
+            // getDrawingTransform only scales down, so draw at 72 dpi into a scaled context.
+            ctx.scaleBy(x: scale, y: scale)
+            let unscaled = CGRect(origin: .zero, size: ptSize)
+            ctx.concatenate(ref.getDrawingTransform(.cropBox, rect: unscaled, rotate: 0, preserveAspectRatio: true))
+            ctx.clip(to: ref.getBoxRect(.cropBox))
+            ctx.drawPDFPage(ref)
+        } else {
+            ctx.scaleBy(x: scale, y: scale)
+            page.draw(with: .cropBox, to: ctx)
+        }
         guard let img = ctx.makeImage() else { throw ActionError("Couldn't render page.") }
         return img
     }

@@ -7,7 +7,7 @@ struct SliceOrderSettings: View {
     @State private var wheel = WheelChoice.convertImage
 
     enum WheelChoice: String, CaseIterable, Identifiable {
-        case convertImage, convertPDF, convertDocument, convertVideo, convertAudio, edit
+        case convertImage, convertPDF, convertDocument, convertVideo, convertAudio, edit, editPDF, combine
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -16,24 +16,34 @@ struct SliceOrderSettings: View {
             case .convertDocument: return "Convert · Documents"
             case .convertVideo: return "Convert · Video"
             case .convertAudio: return "Convert · Audio"
-            case .edit: return "Edit"
+            case .edit: return "Edit · Images"
+            case .editPDF: return "Edit · PDF"
+            case .combine: return "Combine (several files)"
             }
         }
         var kind: FileKind {
             switch self {
-            case .convertImage, .edit: return .image
-            case .convertPDF: return .pdf
+            case .convertImage, .edit, .combine: return .image
+            case .convertPDF, .editPDF: return .pdf
             case .convertDocument: return .document
             case .convertVideo: return .video
             case .convertAudio: return .audio
             }
         }
-        var mode: WheelMode { self == .edit ? .edit : .convert }
+        var mode: WheelMode {
+            switch self {
+            case .edit, .editPDF: return .edit
+            case .combine: return .combine
+            default: return .convert
+            }
+        }
         var key: String { ActionRegistry.orderKey(kind: kind, mode: mode) }
     }
 
     private var actions: [FileAction] {
+        let sample = URL(fileURLWithPath: "/Preview/Example." + (wheel.kind == .pdf ? "pdf" : "png"))
         let all = ActionRegistry.shared.allActions(for: wheel.kind, mode: wheel.mode)
+            .filter { wheel.mode != .edit || $0.supports(sample) }
         return ActionRegistry.shared.ordered(all, kind: wheel.kind, mode: wheel.mode, prefs: settings.preferences)
     }
 

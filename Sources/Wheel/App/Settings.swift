@@ -90,10 +90,25 @@ final class Settings: ObservableObject {
     /// Seconds the "Saved" toast stays up.
     @Published var toastDuration: Double { didSet { d.set(toastDuration, forKey: "toastDuration") } }
 
+    /// Local diagnostic log in ~/Library/Logs/Wheel. On by default; nothing ever leaves the Mac.
+    @Published var loggingEnabled: Bool {
+        didSet {
+            d.set(loggingEnabled, forKey: "loggingEnabled")
+            if !loggingEnabled { WheelLog.shared.info("Logging turned off by the user") }
+            WheelLog.shared.isEnabled = loggingEnabled
+            if loggingEnabled { WheelLog.shared.info("Logging turned on by the user") }
+        }
+    }
+    /// Off by default: logs show ‹pdf› instead of names.
+    @Published var logFileNames: Bool {
+        didSet { d.set(logFileNames, forKey: "logFileNames"); WheelLog.shared.includeFileNames = logFileNames }
+    }
+
     private init() {
         d.register(defaults: ["enabled": true, "trigger": "shift", "quality": 0.85, "revealAfterSave": false,
                               "pdfAllPages": true, "pdfDPI": 300, "onboarded": false,
-                              "hubSwitch": "both", "hubHoverDelay": 0.45, "toastPlacement": "cursor", "toastDuration": 4.0])
+                              "hubSwitch": "both", "hubHoverDelay": 0.45, "toastPlacement": "cursor", "toastDuration": 4.0,
+                              "loggingEnabled": true, "logFileNames": false])
         enabled = d.bool(forKey: "enabled")
         trigger = TriggerModifier(rawValue: d.string(forKey: "trigger") ?? "") ?? .shift
         quality = d.double(forKey: "quality")
@@ -101,7 +116,12 @@ final class Settings: ObservableObject {
         pdfAllPages = d.bool(forKey: "pdfAllPages")
         pdfDPI = d.integer(forKey: "pdfDPI")
         hiddenActions = Set(d.stringArray(forKey: "hiddenActions") ?? [])
-        sliceOrder = d.dictionary(forKey: "sliceOrder") as? [String: [String]] ?? [:]
+        var order = d.dictionary(forKey: "sliceOrder") as? [String: [String]] ?? [:]
+        if let shared = order.removeValue(forKey: "edit") { // 0.2 kept one Edit order for all kinds
+            order["edit.image"] = order["edit.image"] ?? shared
+            d.set(order, forKey: "sliceOrder")
+        }
+        sliceOrder = order
         onboarded = d.bool(forKey: "onboarded")
         var style = d.data(forKey: "style").flatMap { try? JSONDecoder().decode(WheelStyle.self, from: $0) } ?? WheelStyle()
         if let old = d.string(forKey: "accentStyle") { // one-time migration of the 0.1 setting
@@ -114,6 +134,10 @@ final class Settings: ObservableObject {
         hubHoverDelay = d.double(forKey: "hubHoverDelay")
         toastPlacement = ToastPlacement(rawValue: d.string(forKey: "toastPlacement") ?? "") ?? .cursor
         toastDuration = d.double(forKey: "toastDuration")
+        loggingEnabled = d.bool(forKey: "loggingEnabled")
+        logFileNames = d.bool(forKey: "logFileNames")
+        WheelLog.shared.isEnabled = loggingEnabled
+        WheelLog.shared.includeFileNames = logFileNames
 
         // Repaint when the user changes the accent colour in System Settings.
         NotificationCenter.default.addObserver(forName: NSColor.systemColorsDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
@@ -176,7 +200,7 @@ final class Settings: ObservableObject {
             do {
                 if newValue { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             } catch {
-                NSLog("Wheel: launch at login change failed: \(error)")
+                WheelLog.shared.error("Launch at login change failed: \(error.localizedDescription)")
             }
         }
     }

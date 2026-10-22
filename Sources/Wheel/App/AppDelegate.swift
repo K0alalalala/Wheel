@@ -13,9 +13,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hideAfterMouseUp: DispatchWorkItem?
 
     func applicationDidFinishLaunching(_ note: Notification) {
+        startDiagnostics()
         NSApp.setActivationPolicy(.accessory) // belt and braces with LSUIElement
         Preferences.current = { Settings.shared.preferences }
         ActionRegistry.shared.register(EditToolsProvider())
+        ActionRegistry.shared.registerFirst(PDFToolsProvider()) // PDF tools lead the PDF Edit wheel
+        ActionRegistry.shared.register(CombineProvider())
         buildStatusItem()
 
         wheel.onDrop = { action, urls in ActionRunner.shared.run(action, on: urls) }
@@ -57,8 +60,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 wheel.model.styleOverride = preset.style // preview only; not saved
             }
             let screen = NSScreen.main?.frame ?? .zero
-            wheel.show(at: CGPoint(x: screen.midX, y: screen.midY), urls: [file])
-            if args.count > i + 3, args[i + 3] == "edit", wheel.model.mode != .edit { wheel.model.toggleMode() }
+            // Several files: --preview wheel a.pdf+b.png …
+            let files = args[i + 2].split(separator: "+").map { URL(fileURLWithPath: String($0)) }
+            wheel.show(at: CGPoint(x: screen.midX, y: screen.midY), urls: files)
+            if args.count > i + 3, let m = WheelMode(rawValue: args[i + 3]) { wheel.model.mode = m; wheel.model.rebuild() }
             if args.count > i + 4, let n = Int(args[i + 4]) { wheel.model.hover = n < 0 ? .hub : .slice(n) }
             if let s = args.firstIndex(of: "--snapshot"), args.count > s + 1 {
                 let out = URL(fileURLWithPath: args[s + 1])
@@ -67,9 +72,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     NSApp.terminate(nil)
                 }
             }
-        } else if let action = ActionRegistry.shared.allActions(for: FileKind.of(file), mode: .edit).first(where: { $0.id == what })
-                    ?? ActionRegistry.shared.allActions(for: FileKind.of(file), mode: .convert).first(where: { $0.id == what }) {
-            ActionRunner.shared.run(action, on: [file])
+        } else if let action = WheelMode.cycle.lazy.compactMap({ ActionRegistry.shared.allActions(for: FileKind.of(file), mode: $0).first { $0.id == what } }).first {
+            ActionRunner.shared.run(action, on: args[i + 2].split(separator: "+").map { URL(fileURLWithPath: String($0)) })
             if let s = args.firstIndex(of: "--snapshot"), args.count > s + 1 {
                 let out = URL(fileURLWithPath: args[s + 1])
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
@@ -86,10 +90,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     #endif
 
-    private func handle(_ event: DragMonitor.Event) {
-        #if DEBUG
-        NSLog("Wheel drag event: %@", String(describing: event))
+    func applicationWillTerminate(_ notification: Notification) {
+        CrashReporter.stopCleanly()
+    }
+
+    /// Local log + crash capture. `Settings` has already applied the user's on/off choice.
+    private func startDiagnostics() {
+        let info = Bundle.main.infoDictionary
+        let version = "\(info?["CFBundleShortVersionString"] as? String ?? "dev") (\(info?["CFBundleVersion"] as? String ?? "0"))"
+        CrashReporter.start(version: version)
+        let s = Settings.shared
+        #if arch(arm64)
+        let arch = "arm64"
+        #else
+        let arch = "x86_64"
         #endif
+        WheelLog.shared.info("Launch Wheel \(version) on macOS \(ProcessInfo.processInfo.operatingSystemVersionString) \(arch)")
+        WheelLog.shared.info("Settings: enabled=\(s.enabled) trigger=\(s.trigger.rawValue) hub=\(s.hubSwitch.rawValue) size=\(s.style.size) accent=\(s.style.accent.rawValue) fileNames=\(s.logFileNames)")
+        let tools = ["ffmpeg": ExternalTools.ffmpeg, "cwebp": ExternalTools.cwebp, "pandoc": ExternalTools.pandoc,
+                     "7zz": ExternalTools.sevenZip, "rar": ExternalTools.rar]
+        WheelLog.shared.info("Optional tools: " + tools.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value == nil ? "no" : "yes")" }.joined(separator: " "))
+    }
+
+    private func handle(_ event: DragMonitor.Event) {
         switch event {
         case .show(let point, let urls):
             hideAfterMouseUp?.cancel()
@@ -116,6 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleEnabled() {
         Settings.shared.enabled.toggle()
+        WheelLog.shared.info("Wheel \(Settings.shared.enabled ? "enabled" : "disabled") from the menu bar")
         if Settings.shared.enabled { monitor.start() } else { monitor.stop() }
         updateIcon()
     }
@@ -155,7 +179,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showOnboarding() {
         if onboardingWindow == nil {
-            let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 460, height: 440),
+            let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 460, height: 490),
                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
             w.title = "Welcome to Wheel"
             w.contentView = NSHostingView(rootView: OnboardingView(onDone: { [weak self] in

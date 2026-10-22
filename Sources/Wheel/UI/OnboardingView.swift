@@ -21,7 +21,7 @@ struct OnboardingView: View {
 
             step(1, "Start dragging any file", "From Finder or the Desktop.")
             step(2, "Hold \(Settings.shared.trigger.title)", "A wheel appears under the cursor.")
-            step(3, "Drop on a slice", "The result is saved next to the original. Originals are never changed. Hover the centre to switch between Convert and Edit.")
+            step(3, "Drop on a slice", "The result is saved next to the original. Originals are never changed. Hover the centre to switch between Convert, Edit and (for several files) Combine.")
 
             GroupBox {
                 HStack(alignment: .top) {
@@ -45,6 +45,13 @@ struct OnboardingView: View {
                 .padding(4)
             }
 
+            Label {
+                Text("Wheel keeps a private diagnostic log on this Mac to help fix crashes. It's never uploaded. Turn it off any time in Settings → General.")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "doc.text.magnifyingglass").foregroundStyle(.secondary)
+            }
+
             Spacer(minLength: 0)
             HStack {
                 Spacer()
@@ -52,7 +59,7 @@ struct OnboardingView: View {
             }
         }
         .padding(24)
-        .frame(width: 460, height: 440)
+        .frame(width: 460, height: 490)
         .onReceive(poll) { _ in trusted = AXIsProcessTrusted() }
     }
 

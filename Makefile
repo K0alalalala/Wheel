@@ -3,7 +3,7 @@
 SHELL := /bin/zsh
 export DEVELOPER_DIR ?= $(shell if [[ -d /Applications/Xcode.app && "$$(xcode-select -p)" == *CommandLineTools* ]]; then echo /Applications/Xcode.app/Contents/Developer; else xcode-select -p; fi)
 
-.PHONY: build test app run dmg check icon clean
+.PHONY: build test app run dmg check icon logs clean
 
 build:            ## Compile everything (debug)
 	swift build
@@ -28,6 +28,10 @@ check:            ## Everything CI checks: tests, privacy scan, credits guard
 
 icon:             ## Regenerate Resources/AppIcon.icns
 	swift scripts/make-icon.swift
+
+logs:             ## Show where the local log is and its last 40 lines
+	@echo "~/Library/Logs/Wheel"; ls -l ~/Library/Logs/Wheel 2>/dev/null || echo "(no logs yet)"
+	@tail -n 40 ~/Library/Logs/Wheel/wheel.log 2>/dev/null || true
 
 clean:
 	rm -rf .build build

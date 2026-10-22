@@ -22,20 +22,36 @@ build/Wheel.app/Contents/MacOS/Wheel --preview edit.crop <file> --snapshot /tmp/
 build/Wheel.app/Contents/MacOS/Wheel --preview settings appearance --snapshot /tmp/s.png
 ```
 
+## Debugging with the user's logs
+
+Wheel writes a local, redacted log to `~/Library/Logs/Wheel/` (`wheel.log`, rotated `wheel.N.log`, and `crash-<date>.txt` summaries of macOS crash reports). The full system reports are in `~/Library/Logs/DiagnosticReports/Wheel-*.ips`.
+
+- **Ask the user before reading these files**, and don't copy their contents anywhere outside the conversation.
+- Start with the newest `crash-*.txt` (the crashing thread's stack), then the lines before `[crash]` / `[error]` in `wheel.log`. "The previous session ended unexpectedly" marks a crash or force quit.
+- Logging may be off (Settings → General → Diagnostics). If there are no logs, ask the user to turn it on and reproduce the problem.
+
+When adding code, log with `WheelLog.shared.info/warning/error(...)`:
+- Describe files with `WheelLog.shared.describe(url)` (gives `‹pdf›` unless the user allowed names).
+- Pass error text through `redact(_:files:)`.
+- Never log file contents, passwords, tool arguments or full paths.
+
 ## Layout
 
 ```
 Sources/WheelCore/         engines + action system, no app UI (public API)
-  Actions/FileAction.swift     FileAction protocol, FileKind, WheelMode
+  Actions/FileAction.swift     FileAction protocol, FileKind, WheelMode (convert / edit / combine)
   Actions/ActionRegistry.swift ActionProvider, registry, Preferences, slice ordering
   Actions/ConvertActions.swift ConvertAction + per-kind target lists
-  Engines/                     Image/PDF/Document/Media engines, ExternalTools, OutputPath
+  Diagnostics/                 WheelLog (local redacted log), CrashReporter (unclean-exit marker, crash summaries)
+  Engines/                     Image/PDF/Document/Media engines, PDFTools (page ops, stamps, OCR, security), CombineEngine (to PDF, stitch, GIF, join), ArchiveEngine, ExternalTools, OutputPath
 Sources/Wheel/             the app
   App/        AppDelegate (menu bar), ActionRunner, Settings (UserDefaults + profiles)
   Drag/       DragMonitor: detects file drag + trigger modifier
   Wheel/      WheelPanel (drop target, force click), WheelView, WheelGeometry, WheelStyle (+ presets)
-  Editors/    one file per edit tool; EditToolsProvider lists them
-  UI/         settings tabs, toast, editor window, glass, onboarding, about
+  Editors/    one file per image edit tool; EditToolsProvider lists them
+  Editors/Combine CombineProvider (multi-file wheel), OrderedFilesEditor, Archive/Stitch/GIF editors
+  Editors/PDF PDFToolsProvider (PDF Edit wheel, batch tools), PageGridEditor, PDFOptionEditors (split, watermark, numbers, protect, unlock, launcher)
+  UI/         settings tabs (incl. DiagnosticsSection), toast, editor window, glass, onboarding, about
   Credits.swift   PROTECTED, see below
 Tests/WheelTests/          XCTest
 scripts/                   build-app, make-dmg, privacy-check, check-credits, make-icon
@@ -45,6 +61,8 @@ scripts/                   build-app, make-dmg, privacy-check, check-credits, ma
 
 - **New convert format:** add it to `ConvertAction.targets[kind]` and handle it in the matching engine. Add a test in `Tests/WheelTests/CoreTests.swift`.
 - **New edit tool:** create `Sources/Wheel/Editors/<Name>Editor.swift` with a `FileAction` (`mode = .edit`, `isInteractive = true`, UI via `EditorWindow.present`). Append it to `EditToolsProvider.tools`.
+- **New PDF tool:** put the logic in `PDFTools` (WheelCore) with a test in `Tests/WheelTests/PDFToolsTests.swift`. A one-shot tool is a `static let` on `PDFBatchAction`; a tool with options is a `FileAction` plus an editor in `Editors/PDF/`. Add it to `PDFToolsProvider.tools`, give it a `summary` for the All Tools launcher, and update `PDFWheelTests`.
+- **New multi-file action:** a `FileAction` with `mode = .combine` in `Editors/Combine/`. Implement `accepts(_ urls:)` to decide from the whole set when it's offered, and use `combinesFiles = true` (one-shot) or `isInteractive = true` (editor). Put the engine in `CombineEngine`/`ArchiveEngine` with a test in `CombineTests.swift`, and add the action to `CombineProvider.tools`.
 - **New family of actions:** conform to `ActionProvider` and register it in `AppDelegate.applicationDidFinishLaunching`.
 - **New look/feel option:** add a field to `WheelStyle` (give it a default, add it to `init(from:)` and `clamp()`). Use it in `WheelView`/`WheelGeometry` and add a control in `UI/AppearanceSettings.swift`. Old theme files must keep loading.
 - **New preference:** add a `@Published` property to `Settings`. If core code needs it, pass it through `Preferences`.
@@ -52,7 +70,7 @@ scripts/                   build-app, make-dmg, privacy-check, check-credits, ma
 ## Rules
 
 1. **Never modify or delete input files.** Actions write new files beside the source via `OutputPath.beside(...)` and never overwrite.
-2. **No network calls, telemetry, analytics or auto-updaters.**
+2. **No network calls, telemetry, analytics or auto-updaters.** Diagnostics stay in the local log.
 3. Run external tools with `Process` and an argument array, never through a shell.
 4. Fail with `ActionError("clear, actionable message")`. Missing optional tools show up as `unavailableReason`.
 5. Keep `WheelCore` free of app UI (no SwiftUI views, no `Settings`).

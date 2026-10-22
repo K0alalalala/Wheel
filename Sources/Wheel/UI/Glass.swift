@@ -27,6 +27,13 @@ struct GlassBackground: NSViewRepresentable {
         return v
     }
 
+    /// Always fill the offered space and never ask AppKit for a fitting size. Without this, SwiftUI
+    /// measures the effect view through Auto Layout, which can trip AppKit's `_nsis_frameInEngine`
+    /// assertion and abort the app (the crash seen in 0.4.0 reports).
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSVisualEffectView, context: Context) -> CGSize? {
+        CGSize(width: proposal.width ?? 0, height: proposal.height ?? 0)
+    }
+
     func updateNSView(_ v: NSVisualEffectView, context: Context) {
         v.material = material
         v.blendingMode = blending

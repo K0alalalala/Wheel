@@ -31,9 +31,19 @@ public enum FileKind: String, CaseIterable, Codable {
 
 public enum WheelMode: String, Codable {
     case convert, edit
+    /// Actions on several files at once (combine, archive…). Offered when two or more files are dragged.
+    case combine
 
-    public var toggled: WheelMode { self == .convert ? .edit : .convert }
-    public var title: String { self == .convert ? "Convert" : "Edit" }
+    public var title: String {
+        switch self {
+        case .convert: return "Convert"
+        case .edit: return "Edit"
+        case .combine: return "Combine"
+        }
+    }
+
+    /// Hub cycle order: Convert → Edit → Combine → Convert.
+    public static let cycle: [WheelMode] = [.convert, .edit, .combine]
 }
 
 /// Reports progress for a single job. Values are 0...1.
@@ -47,6 +57,9 @@ public protocol FileAction {
     var mode: WheelMode { get }
     /// Whether this action can take the file at all.
     func supports(_ url: URL) -> Bool
+    /// Whether the action should be offered for this whole set of dragged files.
+    /// Defaults to `supports(first)`; Combine actions check the set (e.g. "two or more images").
+    func accepts(_ urls: [URL]) -> Bool
     /// nil when ready, otherwise a short reason the slice is disabled (missing backend, etc).
     var unavailableReason: String? { get }
     /// Runs the action. Interactive actions present their editor and resume when it closes.
@@ -54,11 +67,18 @@ public protocol FileAction {
     func run(_ urls: [URL], progress: @escaping ProgressHandler) async throws -> [URL]
     /// Interactive actions handle all urls in one editor session; batch actions are run per file by the runner.
     var isInteractive: Bool { get }
+    /// Non-interactive actions that need every dropped file in one call (e.g. Merge).
+    var combinesFiles: Bool { get }
+    /// One line describing what the action does, for launchers and settings.
+    var summary: String { get }
 }
 
 extension FileAction {
+    public func accepts(_ urls: [URL]) -> Bool { urls.first.map(supports) ?? false }
     public var unavailableReason: String? { nil }
     public var isInteractive: Bool { false }
+    public var combinesFiles: Bool { false }
+    public var summary: String { "" }
 }
 
 public struct ActionError: LocalizedError {

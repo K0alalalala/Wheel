@@ -62,11 +62,12 @@ struct AppearanceSettings: View {
                     Text("PDF").tag(FileKind.pdf)
                     Text("Doc").tag(FileKind.document)
                     Text("Video").tag(FileKind.video)
+                    Text("Mixed").tag(FileKind.other)
                 }
                 .labelsHidden().pickerStyle(.segmented)
             }
             HStack {
-                Button(preview.model.mode == .convert ? "Show Edit" : "Show Convert") { preview.model.toggleMode() }
+                Button("Show \(preview.model.nextMode.title)") { preview.model.toggleMode() }
                 Spacer()
                 Button("Replay") { preview.replay() }
             }
@@ -264,8 +265,15 @@ final class PreviewWheel: ObservableObject {
         let ext = ["image": "jpg", "pdf": "pdf", "document": "docx", "video": "mov"][kind.rawValue] ?? "jpg"
         let mode = model.mode
         model.reset()
-        model.load([URL(fileURLWithPath: "/Preview/Example.\(ext)")])
-        if model.mode != mode, !ActionRegistry.shared.slices(for: model.urls, mode: mode).isEmpty { model.toggleMode() }
+        // "Mixed" previews the Combine wheel with a PDF and two photos.
+        let urls = kind == .other
+            ? ["Report.pdf", "Photo 1.jpg", "Photo 2.jpg"].map { URL(fileURLWithPath: "/Preview/\($0)") }
+            : [URL(fileURLWithPath: "/Preview/Example.\(ext)")]
+        model.load(urls)
+        if kind != .other, model.mode != mode, !ActionRegistry.shared.slices(for: urls, mode: mode).isEmpty {
+            model.mode = mode
+            model.rebuild()
+        }
         model.visible = true
     }
 

@@ -1,3 +1,4 @@
+import PDFKit
 import AppKit
 import ImageIO
 import XCTest
@@ -134,5 +135,37 @@ final class CreditsTests: XCTestCase {
         XCTAssertEqual(Credits.human, "K0alalalala")
         XCTAssertEqual(Credits.roles.first?.who, Credits.human)
         XCTAssertTrue(Credits.roles.contains { $0.who.hasPrefix("Claude") })
+    }
+}
+
+final class PDFWheelTests: XCTestCase {
+    func testPDFEditWheelDefaultsAndLauncherCoverage() {
+        let r = ActionRegistry()
+        r.register(EditToolsProvider())
+        r.registerFirst(PDFToolsProvider())
+        let pdf = [URL(fileURLWithPath: "/x/Report.pdf")]
+        XCTAssertEqual(r.slices(for: pdf, mode: .edit).map(\.action.title),
+                       ["All Tools", "Organize", "Merge", "Split", "Protect", "OCR", "Watermark", "Extract"])
+        let all = r.allActions(for: .pdf, mode: .edit).filter { $0.supports(pdf[0]) }
+        XCTAssertEqual(all.count, 20, "18 PDF tools + Compress + Metadata")
+        XCTAssertEqual(Set(all.map(\.id)).count, all.count, "ids are unique")
+        XCTAssertTrue(PDFToolsProvider.tools.allSatisfy { !$0.summary.isEmpty }, "launcher needs a summary for every tool")
+        // Image edit wheel is unchanged.
+        XCTAssertEqual(r.slices(for: [URL(fileURLWithPath: "/x/a.png")], mode: .edit).first?.action.title, "Compress")
+    }
+
+    @MainActor
+    func testBatchToolsWriteBesideTheSource() async throws {
+        let f = try Fixtures()
+        let src = try f.pdf("Report.pdf", pages: 3)
+        for action in [PDFBatchAction.rotate, .reverse, .trim, .clean, .twoUp, .grayscale] {
+            let out = try await action.run([src], progress: { _ in })
+            XCTAssertEqual(out.first?.deletingLastPathComponent().path, f.dir.path, action.title)
+            XCTAssertNotNil(PDFDocument(url: out[0]), action.title)
+        }
+        let merged = try await PDFMergeAction().run([src, try f.pdf("Annex.pdf", pages: 2)], progress: { _ in })
+        XCTAssertEqual(merged.first?.lastPathComponent, "Annex Merged.pdf", "named after the first file by name order")
+        XCTAssertEqual(PDFDocument(url: merged[0])?.pageCount, 5)
+        XCTAssertTrue(f.files().contains("Report.pdf"), "source untouched")
     }
 }

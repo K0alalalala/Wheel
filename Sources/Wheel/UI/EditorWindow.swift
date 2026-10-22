@@ -39,6 +39,7 @@ final class EditorWindow: NSObject, EditorWindowDelegate {
     /// Shows an editor near the mouse and waits until it saves or is closed.
     static func present<Content: View>(title: String, size: CGSize,
                                        @ViewBuilder content: @escaping (@escaping EditorFinish) -> Content) async throws -> [URL] {
+        WheelLog.shared.info("Editor opened: \(title)")
         let editor = EditorWindow(title: title, size: size, content: content)
         open.append(editor)
         return try await withCheckedThrowingContinuation { cont in

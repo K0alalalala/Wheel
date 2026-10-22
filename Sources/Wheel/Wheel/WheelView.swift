@@ -18,14 +18,16 @@ final class WheelModel: ObservableObject {
     func load(_ urls: [URL]) {
         guard urls != self.urls else { return }
         self.urls = urls
-        // Files with nothing to convert open straight on the Edit wheel, and vice versa.
-        let kind = urls.first.map(FileKind.of) ?? .other
-        if ActionRegistry.shared.slices(for: urls, mode: mode).isEmpty, kind != .other { mode = mode.toggled }
+        // Mixed files open on Combine; otherwise the first wheel that has something to offer.
+        mode = ActionRegistry.shared.initialMode(for: urls)
         rebuild()
     }
 
+    /// The wheel the hub switches to next (skips wheels with nothing to offer).
+    var nextMode: WheelMode { ActionRegistry.shared.nextMode(after: mode, for: urls) }
+
     func toggleMode() {
-        mode = mode.toggled
+        mode = nextMode
         rebuild()
     }
 
@@ -37,7 +39,7 @@ final class WheelModel: ObservableObject {
 
     var hubTitle: String {
         if case .slice(let i) = hover, slices.indices.contains(i) { return slices[i].action.title }
-        if hover == .hub { return mode.toggled.title }
+        if hover == .hub { return nextMode == mode ? mode.title : nextMode.title }
         if urls.isEmpty { return "…" }
         return slices.isEmpty ? "No actions" : mode.title
     }
@@ -133,7 +135,7 @@ struct WheelView: View {
 
     private func showsIcon(_ count: Int) -> Bool {
         switch style.labels {
-        case .auto: return model.mode == .edit || count > 6
+        case .auto: return model.mode != .convert || count > 6
         case .iconsAndText, .iconsOnly: return true
         case .textOnly: return false
         }
@@ -163,7 +165,7 @@ struct WheelView: View {
                 }
                 if style.labels != .iconsOnly {
                     Text(style.uppercase ? slice.action.title.uppercased() : slice.action.title)
-                        .font(.system(size: (model.mode == .edit || count > 6 ? 9.5 : 12) * k, weight: .bold))
+                        .font(.system(size: (model.mode != .convert || count > 6 ? 9.5 : 12) * k, weight: .bold))
                         .tracking(style.uppercase ? 0.6 : 0)
                         .lineLimit(1).minimumScaleFactor(0.6)
                 }

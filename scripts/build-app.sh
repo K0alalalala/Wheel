@@ -35,8 +35,8 @@ fi
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
-# Version from the latest git tag (v1.2.3), else Info.plist's default.
-if VERSION="$(git describe --tags --abbrev=0 2>/dev/null)"; then
+# Version from a git tag on this exact commit (v1.2.3), else Info.plist's value.
+if VERSION="$(git describe --tags --exact-match 2>/dev/null)"; then
   /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION#v}" "$APP/Contents/Info.plist"
 fi
 BUILD_NUMBER="$(git rev-list --count HEAD 2>/dev/null || echo 1)"

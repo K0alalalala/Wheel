@@ -67,6 +67,7 @@ struct SettingsView: View {
                     ForEach([72, 150, 200, 300, 600], id: \.self) { Text("\($0) dpi").tag($0) }
                 }
             }
+            DiagnosticsSection()
             Section {
                 Button("Show permissions & setup…", action: onShowOnboarding)
             }
